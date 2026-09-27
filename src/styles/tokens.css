@@ -1,0 +1,154 @@
+/* ============================================================================
+   MAUSAM — DESIGN TOKENS
+   The entire UI transforms between weather states through these tokens.
+   Every state is a mid-to-dark sky so white text stays legible in all six;
+   "fog" is expressed as desaturation + haze, never as brightness.
+   ==========================================================================*/
+
+/* Registered so colours interpolate rather than snap when the state changes. */
+@property --wx-sky-top {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #0d3b6e;
+}
+@property --wx-sky-mid {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #1f6fb8;
+}
+@property --wx-sky-bot {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #58a8e0;
+}
+@property --wx-accent {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffc44d;
+}
+@property --wx-haze {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffffff00;
+}
+
+:root {
+  color-scheme: dark;
+
+  /* Sky — consumed by both CSS and the Canvas2D atmosphere layer */
+  --wx-sky-top: #0d3b6e;
+  --wx-sky-mid: #1f6fb8;
+  --wx-sky-bot: #58a8e0;
+  --wx-accent: #ffc44d;
+  --wx-haze: #ffffff00;
+
+  /* Surfaces */
+  /* Surfaces are used sparingly and mostly for grouping; the default is
+     "no card at all" so the weather stays the primary visual. */
+  --card: rgb(10 16 28 / 0.42);
+  --card-strong: rgb(10 16 28 / 0.62);
+  --line: rgb(255 255 255 / 0.14);
+  --line-soft: rgb(255 255 255 / 0.08);
+
+  /* Text veil stops per state; bright skies need more, night needs almost none. */
+  --wx-veil-top: rgb(4 14 34 / 0.52);
+  --wx-veil-bot: rgb(4 12 28 / 0.58);
+
+  /* Ink */
+  --ink: #ffffff;
+  --ink-soft: rgb(255 255 255 / 0.78);
+  /* 0.5 was too weak over a bright daytime sky: 12px footer text dropped to
+     3.25:1 on Sunny. 0.72 keeps the quiet look and clears 4.5:1 everywhere. */
+  --ink-faint: rgb(255 255 255 / 0.75);
+
+  /* Semantic */
+  --warn: #ffb020;
+  --danger: #ff6b5e;
+  --good: #5ddba4;
+  --info: #6cc5f0;
+
+  /* Severity scale for decision cards */
+  --sev-calm: #5ddba4;
+  --sev-note: #6cc5f0;
+  --sev-caution: #ffc44d;
+  --sev-avoid: #ff6b5e;
+
+  --radius: 20px;
+  --radius-sm: 12px;
+  --gap: 12px;
+
+  --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", system-ui, sans-serif;
+}
+
+/* ---------------------------------------------------------------- SUNNY --- */
+[data-wx="sunny"] {
+  --wx-sky-top: #0a3f7d;
+  --wx-sky-mid: #1f6fb4;
+  --wx-sky-bot: #6cb6e2;
+  --wx-accent: #ffcf6b;
+  --wx-haze: #ffd9a000;
+  --wx-veil-top: rgb(4 14 34 / 0.44);
+  --wx-veil-bot: rgb(4 12 28 / 0.62);
+}
+
+
+/* --------------------------------------------------------------- CLOUDY --- */
+[data-wx="cloudy"] {
+  --wx-sky-top: #171d26;
+  --wx-sky-mid: #3b464f;
+  --wx-sky-bot: #5f6a76;
+  --wx-accent: #b9c8d6;
+  --wx-haze: #c9d6e200;
+  --wx-veil-top: rgb(8 12 18 / 0.52);
+  --wx-veil-bot: rgb(8 12 18 / 0.56);
+}
+
+
+/* ----------------------------------------------------------------- RAIN --- */
+[data-wx="rain"] {
+  --wx-sky-top: #080f18;
+  --wx-sky-mid: #182838;
+  --wx-sky-bot: #33506b;
+  --wx-accent: #5fb2e4;
+  --wx-haze: #9fb6cc20;
+  --wx-veil-top: rgb(1 5 11 / 0.54);
+  --wx-veil-bot: rgb(1 5 11 / 0.50);
+}
+
+
+/* ---------------------------------------------------------- THUNDERSTORM -- */
+[data-wx="thunderstorm"] {
+  --wx-sky-top: #03050a;
+  --wx-sky-mid: #101725;
+  --wx-sky-bot: #242c40;
+  --wx-accent: #b39cff;
+  --wx-haze: #8b7bd626;
+  --wx-veil-top: rgb(0 1 4 / 0.50);
+  --wx-veil-bot: rgb(0 1 4 / 0.44);
+}
+
+
+/* ------------------------------------------------------------------ FOG --- */
+[data-wx="fog"] {
+  --wx-sky-top: #333c46;
+  --wx-sky-mid: #4f5a65;
+  --wx-sky-bot: #6d7783;
+  --wx-accent: #d4dbe2;
+  --wx-haze: #c6d0d9a0;
+  --wx-veil-top: rgb(12 16 21 / 0.66);
+  --wx-veil-bot: rgb(12 16 21 / 0.7);
+}
+
+
+/* ---------------------------------------------------------------- NIGHT --- */
+[data-wx="night"] {
+  --wx-sky-top: #02040a;
+  --wx-sky-mid: #0a1120;
+  --wx-sky-bot: #16203a;
+  --wx-accent: #9db4de;
+  --wx-haze: #ffffff00;
+  --wx-veil-top: rgb(1 2 6 / 0.34);
+  --wx-veil-bot: rgb(1 2 6 / 0.30);
+}
+

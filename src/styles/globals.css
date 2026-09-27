@@ -1,0 +1,220 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #05080f;
+}
+
+body {
+  font-family: var(--font);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior-y: none;
+}
+
+#root {
+  min-height: 100%;
+}
+
+/* ---- The weather world -----------------------------------------------------
+   .wx-world is the environment. It is absolutely positioned inside the app
+   viewport and clipped by it, which is the whole point of the redesign: the
+   sky belongs to the application, not to the page behind it. Canvases inside
+   it size themselves to this box (see useCanvasSurface), so on a projector
+   they fill the app window and never bleed past its rounded corners. */
+.wx-world {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+}
+
+/* The base sky plane. Carries the state transition; the canvases above it add
+   the moving parts. */
+.wx-sky {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    178deg,
+    var(--wx-sky-top) 0%,
+    var(--wx-sky-mid) 44%,
+    var(--wx-sky-bot) 100%
+  );
+  transition: background 1400ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.wx-haze {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    130% 74% at 50% 26%,
+    var(--wx-haze) 0%,
+    transparent 72%
+  );
+  transition: background 1400ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Legibility veil: weighted to the top and foot where type sits, nearly clear
+   through the middle so the weather is never hidden behind a scrim. */
+.wx-veil {
+  position: absolute;
+  inset: 0;
+  /* A straight ramp, deliberately with no transparent middle. The content column
+     scrolls, so text passes through every vertical position; a gradient that
+     faded out at 64% left mid-page labels sitting on a bare bright sky
+     (measured 3.1:1 on Sunny). The sky is still fully visible through it. */
+  background: linear-gradient(180deg, var(--wx-veil-top) 0%, var(--wx-veil-bot) 100%);
+  transition: background 1400ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Atmosphere canvases, stacked above the sky plane. */
+.wx-layer {
+  position: absolute;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* ---- The app viewport ------------------------------------------------------
+   Below 1024px Mausam *is* the screen: no frame, no radius, weather to every
+   edge. Above it the app becomes a centred window with a neutral stage around
+   it, so the distinction is obvious — outside is the presentation surface,
+   inside is the weather world. The weather layer is clipped to this box.
+
+   The height must be definite, not just a minimum. With min-height alone this
+   column is content-sized, so a tall state (severe weather) grows the app past
+   the viewport and the *document* scrolls — the header slides away and the
+   atmosphere is no longer edge-to-edge. A fixed height lets the scrolling
+   element below absorb that height internally instead. */
+.wx-viewport {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+@media (min-width: 1024px) {
+  /* The presentation scale, shared by the app window and its sheets so the two
+     can never disagree. Stepped with the room available, so the window grows to
+     roughly 520-600px on a normal projector without ever overflowing. */
+  :root {
+    --wx-pres-zoom: 1;
+  }
+  @media (min-height: 1074px) {
+    :root {
+      --wx-pres-zoom: 1.34;
+    }
+  }
+  @media (min-height: 1014px) and (max-height: 1073px) {
+    :root {
+      --wx-pres-zoom: 1.26;
+    }
+  }
+  @media (min-height: 953px) and (max-height: 1013px) {
+    :root {
+      --wx-pres-zoom: 1.18;
+    }
+  }
+  @media (min-height: 892px) and (max-height: 952px) {
+    :root {
+      --wx-pres-zoom: 1.1;
+    }
+  }
+
+  .wx-stage {
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px;
+    /* Neutral presentation surface. Deliberately colourless so nothing outside
+       the app competes with the weather inside it. */
+    background:
+      radial-gradient(120% 90% at 50% 0%, #10131a 0%, #080a0e 55%, #050609 100%);
+  }
+
+  /* The presentation viewport.
+     Mausam is laid out once at 430px wide and then scaled as a single piece, so
+     type, spacing, radii and the weather world all grow together. Sizing the box
+     larger and letting the components stay at their mobile pixel sizes would
+     shrink the type relative to the window, which is the opposite of what a
+     projector needs. `zoom` (not a transform) is what keeps this a real layout
+     change: the app genuinely reflows at the larger size, and
+     useCanvasSurface samples at the painted ratio so the canvas stays sharp. */
+  .wx-viewport {
+    width: 430px;
+    /* The window always fills the height the stage has left, at any scale, so
+       it cannot overflow on a short screen. Dividing the available height by
+       the zoom is what makes the painted height land back on 100dvh - 56px. */
+    height: calc((100dvh - 56px) / var(--wx-pres-zoom));
+    min-height: 0;
+    flex: 0 0 auto;
+    zoom: var(--wx-pres-zoom);
+    border-radius: 34px;
+    border: 1px solid rgb(255 255 255 / 0.1);
+    box-shadow:
+      0 40px 110px -30px rgb(0 0 0 / 0.9),
+      0 0 0 1px rgb(0 0 0 / 0.5),
+      0 1px 0 0 rgb(255 255 255 / 0.07) inset;
+  }
+
+  /* Sheets are siblings of the window, not children of it, so they carry the
+     same scale explicitly. On a projector a bottom sheet pinned to the screen
+     edge would sit visibly apart from the app it belongs to, so it becomes a
+     centred dialog sized to the window instead. */
+  .wx-sheet-root {
+    align-items: center;
+  }
+  .wx-sheet-panel {
+    zoom: var(--wx-pres-zoom);
+    max-height: calc((100dvh - 56px) / var(--wx-pres-zoom));
+    border-radius: 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
